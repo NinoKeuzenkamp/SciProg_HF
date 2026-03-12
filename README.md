@@ -1,2 +1,2 @@
 # SciProg_HF
-Skeleton Hartree Fock program for teaching purposes
+Hartree Fock program for assignment Scientific Computing and Programming
