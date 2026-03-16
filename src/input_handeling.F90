@@ -19,7 +19,7 @@ contains
         character(32) :: inputfile
         integer, parameter :: unit = 21
 
-        integer :: n_atoms, n_orbs, i
+        integer :: n_atoms, n_orbs, total_charge, n_electron, i         ! total charge of SYSTEM
         real(8), allocatable :: coords(:, :), charge(:)
 
         ! for orbital adding loop
@@ -33,12 +33,12 @@ contains
         ! open file
         open(unit, file=inputfile)
         ! format file:  (contracted orbitals NOT implemented)
-        ! n_atoms n_orbs
+        ! n_atoms n_orbs total_charge_SYSTEM
         ! x y z charge (for each atom)
         ! atom_index angular_momentum coefficient (for each orbital)
 
         ! read number of atoms and number of orbitals and allocate
-        read(unit, *) n_atoms, n_orbs
+        read(unit, *) n_atoms, n_orbs, total_charge
         allocate(coords(3, n_atoms), charge(n_atoms))
 
         ! read atom data into arrays
@@ -61,8 +61,16 @@ contains
         enddo
 
         close(unit)
+
         ! calculate n_occ
-        n_occ = int(sum(charge)/2.D0)
+        n_electron = int(sum(charge)) - total_charge
+        ! make sure n_occ is always a whole number
+        if (mod(n_electron, 2) == 1) then
+            stop "The number of electrons cannot be odd"
+        else
+            n_occ = n_electron/2
+        endif
+        
     end subroutine
 
 end module
