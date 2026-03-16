@@ -20,7 +20,11 @@ program HartreeFock
      integer  :: n_AO, n_occ
      integer  :: kappa, lambda, i
      real(8)  :: E_HF
-     real(8), allocatable :: hcore(:,:),F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)
+     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)
+
+     integer :: n_cycles
+     real(8) :: convergence
+     real(8), allocatable :: hcore(:,:)
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
@@ -50,13 +54,12 @@ program HartreeFock
      ! Compute the core Hamiltonian matrix (the potential is positive, we scale with -e = -1 to get to the potential energy matrix)
      allocate (F(n_AO,n_AO))
      allocate (hcore(n_AO,n_AO))
-     F = T - V
      hcore = T - V
 
      ! Diagonalize the Fock matrix
      allocate (C(n_AO,n_AO))
      allocate (eps(n_AO))
-     call solve_genev (F,S,C,eps)
+     call solve_genev (hcore,S,C,eps)
      print*, "Orbital energies for the core Hamiltonian:",eps
 
      ! Form the density matrix
@@ -68,25 +71,34 @@ program HartreeFock
      allocate (ao_integrals(n_AO,n_AO,n_AO,n_AO))
      call generate_2int (ao_basis,ao_integrals)
 
-    ! SCF loop (without conditions)
-    do i = 1, 50
+    ! SCF loop
+    n_cycles = 50
+    convergence = 1.D-9
+    do i = 1, n_cycles
 
       ! calculate Fock Matrix
       call fock_matrix(F, D, hcore, ao_integrals, n_ao)
 
       ! diagonalise fock matrix
       call solve_genev (F,S,C,eps)
+      print*, "Orbital energies for the core Hamiltonian:",eps, "Cycle: ", i
 
       ! Form the density matrix
       call density_matrix(D, C, n_ao, n_occ)
 
       ! calculate HF energy for current cycle
-      E_HF = sum((hcore + F) *D)
+      E_HF = sum((hcore + F) * D)
       print*, "The Hartree-Fock energy:    ", E_HF, "Cycle: ", i
+
+      if (sqrt(sum((matmul(F,D) - matmul(D,F))**2)) < convergence) then
+        print*, "The program has converged at cycle ", i
+        stop
+      endif
 
     enddo
 
-   end
+    print *, "The program did not converged after ", n_cycles, " cycles"
+  end
 
 
    subroutine define_molecule(molecule)
