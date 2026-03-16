@@ -28,7 +28,6 @@ program HartreeFock
      ! get molecule, ao_basis, and n_occ
      call read_input(molecule, ao_basis, n_occ)
      n_AO = ao_basis%nao
-     n_occ = 3
 
      ! Compute the overlap matrix
      allocate (S(n_AO,n_AO))
