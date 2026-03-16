@@ -7,6 +7,7 @@ program HartreeFock
    use ao_basis
    use compute_integrals
    use diagonalization
+   use input_handeling
 
      implicit none
 
@@ -23,16 +24,11 @@ program HartreeFock
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
-   
-     ! Definition of the molecule
-     call define_molecule(molecule)
 
-     ! Definition of the GTOs
-     call define_basis(ao_basis)
+     ! get molecule, ao_basis, and n_occ
+     call read_input(molecule, ao_basis, n_occ)
      n_AO = ao_basis%nao
-   
-     ! Definition of the number of occupied orbitals
-     n_occ = 3 ! hardwired for this demonstration program, should be set via input
+     n_occ = 3
 
      ! Compute the overlap matrix
      allocate (S(n_AO,n_AO))
@@ -80,31 +76,6 @@ program HartreeFock
 
    end
 
-   subroutine define_molecule(molecule)
-     ! This routine should be improved such that an arbitrary molecule can be given as input
-     ! the coordinates below are for a be-he dimer oriented along the x-axis with a bond length of 2 au
-     use molecular_structure
-     type(molecular_structure_t), intent(inout) :: molecule
-     real(8) :: charge(2),coord(3,2)
-     charge(1)   = 4.D0
-     charge(2)   = 2.D0
-     coord       = 0.D0
-     coord(1,2)  = 2.D0
-     call add_atoms_to_molecule(molecule,charge,coord)
-   end subroutine
 
-   subroutine define_basis(ao_basis)
-    ! This routine can be extended to use better basis sets 
-    ! The coordinates of the shell centers are the nuclear coordinates
-    ! Think of a refactoring of define_molecule and define_basis to ensure consistency 
-     use ao_basis
-     type(basis_set_info_t), intent(inout) :: ao_basis
-     type(basis_func_info_t) :: gto
-     ! Be:  2 uncontracted s-funs:    l      coord          exp      
-     call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),4.D0)
-     call add_shell_to_basis(ao_basis,0,(/0.D0,0.D0,0.D0/),1.D0)
-     ! He:  1 uncontracted s-fun:     l      coord          exp      
-     call add_shell_to_basis(ao_basis,0,(/2.D0,0.D0,0.D0/),1.D0)
-   end subroutine
 
    
