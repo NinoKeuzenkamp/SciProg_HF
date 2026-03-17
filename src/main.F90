@@ -19,12 +19,13 @@ program HartreeFock
      ! Variable naming as in the description of the exercise
      integer  :: n_AO, n_occ
      integer  :: kappa, lambda, i
-     real(8)  :: E_HF
-     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:), D(:,:)
+     real(8)  :: E_HF_old, E_HF_new
+     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:)
 
      integer :: n_cycles
-     real(8) :: convergence
-     real(8), allocatable :: hcore(:,:)
+     real(8) :: tolerance_E, tolerance_D
+     real(8), allocatable :: hcore(:,:), D_old(:,:), D_new(:,:)
+     logical :: converged
 
      ! The following large array can be eliminated when Fock matrix contruction is implemented
      real(8), allocatable :: ao_integrals (:,:,:,:)
@@ -60,44 +61,57 @@ program HartreeFock
      allocate (C(n_AO,n_AO))
      allocate (eps(n_AO))
      call solve_genev (hcore,S,C,eps)
-     print*, "Orbital energies for the core Hamiltonian:",eps
 
      ! Form the density matrix
-     allocate (D(n_AO,n_AO))
-     call density_matrix(D, C, n_ao, n_occ)
+     allocate (D_new(n_AO,n_AO), D_old(n_AO,n_AO))
+     call density_matrix(D_old, C, n_ao, n_occ)
 
+     ! calculate energy of core only system
+     E_HF_old = sum((hcore + F) * D_old)
      
      ! Compute all 2-electron integrals
      allocate (ao_integrals(n_AO,n_AO,n_AO,n_AO))
      call generate_2int (ao_basis,ao_integrals)
 
+
+    ! set tolerances for convergence
+    tolerance_E = 1.D-9
+    tolerance_D = 1.D-3 
     ! SCF loop
     n_cycles = 50
-    convergence = 1.D-9
-    do i = 1, n_cycles
+    i = 1
+    do while (i <= n_cycles)
 
       ! calculate Fock Matrix
-      call fock_matrix(F, D, hcore, ao_integrals, n_ao)
+      call fock_matrix(F, D_old, hcore, ao_integrals, n_ao)
 
       ! diagonalise fock matrix
       call solve_genev (F,S,C,eps)
-      print*, "Orbital energies for the core Hamiltonian:",eps, "Cycle: ", i
+      ! print*, "Orbital energies for the core Hamiltonian:",eps, "Cycle: ", i
 
       ! Form the density matrix
-      call density_matrix(D, C, n_ao, n_occ)
+      call density_matrix(D_new, C, n_ao, n_occ)
 
       ! calculate HF energy for current cycle
-      E_HF = sum((hcore + F) * D)
-      print*, "The Hartree-Fock energy:    ", E_HF, "Cycle: ", i
+      E_HF_new = sum((hcore + F) * D_new)
+      ! print*, "The Hartree-Fock energy:    ", E_HF_new, "Cycle: ", i
 
-      if (sqrt(sum((matmul(F,D) - matmul(D,F))**2)) < convergence) then
-        print*, "The program has converged at cycle ", i
-        stop
-      endif
+      ! if converged, exit SCF loop
+      converged = convergence_check(E_HF_new, E_HF_old, D_new, D_old, tolerance_E, tolerance_D)
+      if (converged) exit
 
+      E_HF_old = E_HF_new
+      D_old    = D_new
+
+      i = i + 1
     enddo
 
-    print *, "The program did not converged after ", n_cycles, " cycles"
+    if (converged) then
+      print "(a, i3, a)", "The program has converged after ", i, " cycles"
+      print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree"
+    else
+      print *, "The program did not converged after ", n_cycles, " cycles"
+    endif
   end
 
 

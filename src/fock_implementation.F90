@@ -53,6 +53,12 @@ contains
     bool = .true.
   endif
 
+  ! wrong convergence criteria
+  ! if (sqrt(sum((matmul(F,D) - matmul(D,F))**2)) < convergence) then
+  !   print*, "The program has converged at cycle ", i
+  !   stop
+  ! endif
+  
   end function convergence_check
 
 end module
