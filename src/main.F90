@@ -1,113 +1,113 @@
 program HartreeFock
 
-   ! Demonstration program that can be used as a starting point
-   ! Lucas Visscher, March 2022
+  ! Demonstration program that can be used as a starting point
+  ! Lucas Visscher, March 2022
 
-   use molecular_structure
-   use ao_basis
-   use compute_integrals
-   use diagonalization
-   use fock_implementation
-   use input_handeling
+  use molecular_structure
+  use ao_basis
+  use compute_integrals
+  use diagonalization
+  use fock_implementation
+  use input_handeling
 
-     implicit none
+  implicit none
 
-     ! Variable containing the molecular structure
-     type(molecular_structure_t) :: molecule
-     ! Variable containing the atomic orbital basis
-     type(basis_set_info_t) :: ao_basis
+  ! Variable containing the molecular structure
+  type(molecular_structure_t) :: molecule
+  ! Variable containing the atomic orbital basis
+  type(basis_set_info_t) :: ao_basis
 
-     ! Variable naming as in the description of the exercise
-     integer  :: n_AO, n_occ
-     integer  :: kappa, lambda, i
-     real(8)  :: E_HF_old, E_HF_new
-     real(8), allocatable :: F(:,:),V(:,:),T(:,:),S(:,:), C(:,:), eps(:)
+  integer  :: n_ao, n_occ
+  integer  :: kappa, lambda, i          ! loop integers
+  real(8)  :: E_HF_old, E_HF_new
 
-     integer :: n_cycles
-     real(8) :: tolerance_E, tolerance_D
-     real(8), allocatable :: hcore(:,:), D_old(:,:), D_new(:,:)
-     logical :: converged
+  real(8), allocatable :: hcore(:,:), V(:,:), T(:,:), S(:,:), ao_integrals(:,:,:,:)
+  real(8), allocatable :: D_old(:,:), D_new(:,:), F(:,:)
+  real(8), allocatable :: C(:,:), eps(:)
 
-     ! The following large array can be eliminated when Fock matrix contruction is implemented
-     real(8), allocatable :: ao_integrals (:,:,:,:)
-
-     ! get molecule, ao_basis, and n_occ
-     call read_input(molecule, ao_basis, n_occ)
-     n_AO = ao_basis%nao
-
-     ! Compute the overlap matrix
-     allocate (S(n_AO,n_AO))
-     call   compute_1e_integrals ("OVL",ao_basis,ao_basis,S)
-
-     ! Compute the kinetic matrix
-     allocate (T(n_AO,n_AO))
-     call   compute_1e_integrals ("KIN",ao_basis,ao_basis,T)
-
-     ! Compute the potential matrix
-     allocate (V(n_AO,n_AO))
-     call   compute_1e_integrals ("POT",ao_basis,ao_basis,V,molecule)
-
-     ! Compute the core Hamiltonian matrix (the potential is positive, we scale with -e = -1 to get to the potential energy matrix)
-     allocate (F(n_AO,n_AO))
-     allocate (hcore(n_AO,n_AO))
-     hcore = T - V
-
-     ! Diagonalize the Fock matrix
-     allocate (C(n_AO,n_AO))
-     allocate (eps(n_AO))
-     call solve_genev (hcore,S,C,eps)
-
-     ! Form the density matrix
-     allocate (D_new(n_AO,n_AO), D_old(n_AO,n_AO))
-     call density_matrix(D_old, C, n_ao, n_occ)
-
-     ! calculate energy of core only system
-     E_HF_old = sum((hcore + F) * D_old)
-     
-     ! Compute all 2-electron integrals
-     allocate (ao_integrals(n_AO,n_AO,n_AO,n_AO))
-     call generate_2int (ao_basis,ao_integrals)
+  ! for SCF loop
+  integer :: n_cycles
+  real(8) :: tolerance_E, tolerance_D
+  logical :: converged
 
 
-    ! set tolerances for convergence
-    tolerance_E = 1.D-9
-    tolerance_D = 1.D-3 
-    ! SCF loop
-    n_cycles = 50
-    i = 1
-    do while (i <= n_cycles)
+  ! get molecule, ao_basis, and n_occ
+  call read_input(molecule, ao_basis, n_occ)
+  n_ao = ao_basis%nao
 
-      ! calculate Fock Matrix
-      call fock_matrix(F, D_old, hcore, ao_integrals, n_ao)
+  ! allocate all arrays
+  allocate(S(n_ao,n_ao))
+  allocate(T(n_ao,n_ao))
+  allocate(V(n_ao,n_ao))
+  allocate(F(n_ao,n_ao))
+  allocate(hcore(n_ao,n_ao))
+  allocate(C(n_ao,n_ao))
+  allocate(eps(n_ao))
+  allocate(D_new(n_ao,n_ao))
+  allocate(D_old(n_ao,n_ao))
+  allocate(ao_integrals(n_ao,n_ao,n_ao,n_ao))
 
-      ! diagonalise fock matrix
-      call solve_genev (F,S,C,eps)
-      ! print*, "Orbital energies for the core Hamiltonian:",eps, "Cycle: ", i
+  ! Compute overlap matrix, "S", kinetic matrix, "T", and potential matrix, "V"
+  call compute_1e_integrals ("OVL",ao_basis,ao_basis,S)
+  call compute_1e_integrals ("KIN",ao_basis,ao_basis,T)
+  call compute_1e_integrals ("POT",ao_basis,ao_basis,V,molecule)
 
-      ! Form the density matrix
-      call density_matrix(D_new, C, n_ao, n_occ)
+  ! Compute the core Hamiltonian matrix (the potential is positive, so we scale with -e = -1 to get to the potential energy matrix)
+  hcore = T - V
 
-      ! calculate HF energy for current cycle
-      E_HF_new = sum((hcore + F) * D_new)
-      ! print*, "The Hartree-Fock energy:    ", E_HF_new, "Cycle: ", i
+  ! Diagonalize the fock matrix
+  call solve_genev (hcore,S,C,eps)
 
-      ! if converged, exit SCF loop
-      converged = convergence_check(E_HF_new, E_HF_old, D_new, D_old, tolerance_E, tolerance_D)
-      if (converged) exit
+  ! Form the density matrix
+  call density_matrix(D_old, C, n_ao, n_occ)
 
-      E_HF_old = E_HF_new
-      D_old    = D_new
+  ! calculate energy of core-only system
+  E_HF_old = sum((hcore + F) * D_old)
+  
+  ! Compute all 2-electron integrals
+  call generate_2int (ao_basis,ao_integrals)
 
-      i = i + 1
-    enddo
 
-    if (converged) then
-      print "(a, i3, a)", "The program has converged after ", i, " cycles"
-      print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree"
-    else
-      print *, "The program did not converged after ", n_cycles, " cycles"
-    endif
-  end
+  ! set tolerances for convergence
+  tolerance_E = 1.D-9
+  tolerance_D = 1.D-3 
+  ! SCF loop
+  n_cycles = 50
+  i = 1
+  do while (i <= n_cycles)
+
+    ! calculate fock matrix
+    call fock_matrix(F, D_old, hcore, ao_integrals, n_ao)
+
+    ! diagonalise fock matrix
+    call solve_genev (F,S,C,eps)
+
+    ! form the density matrix
+    call density_matrix(D_new, C, n_ao, n_occ)
+
+    ! calculate HF energy for current cycle
+    E_HF_new = sum((hcore + F) * D_new)
+    ! print *, "The Hartree-Fock energy:    ", E_HF_new, " of cycle: ", i       ! for debugging energy
+
+    ! if converged, exit SCF loop
+    converged = convergence_check(E_HF_new, E_HF_old, D_new, D_old, tolerance_E, tolerance_D)
+    if (converged) exit
+
+    ! re-initialise "old" variables before entering the next cycle
+    E_HF_old = E_HF_new
+    D_old    = D_new
+
+    i = i + 1
+  enddo
+
+  if (converged) then
+    print "(a, i3, a)", "The program has converged after ", i, " cycles"
+    print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree"
+  else
+    print *, "The program did not converged after ", n_cycles, " cycles"
+  endif
+
+end program HartreeFock
 
 
 
