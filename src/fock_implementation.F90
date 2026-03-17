@@ -21,10 +21,8 @@ contains
       do kappa = 1, n_ao
         F(kappa,lambda) = &
         F(kappa,lambda) &
-        !  + 2.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,:,kappa,lambda)) &
-        !  - 1.D0 *  D(kappa,lambda) * sum(D*ao_integrals(:,lambda,kappa,:))
-        + 2.D0 *  D(kappa,lambda) * sum(D*ao_integrals(kappa,lambda,:,:)) &
-        - 1.D0 *  D(kappa,lambda) * sum(D*ao_integrals(kappa,:,:,lambda))
+        + 2.D0 * sum(D*ao_integrals(kappa,lambda,:,:)) &
+        - 1.D0 * sum(D*ao_integrals(kappa,:,:,lambda))
       end do
     end do
   end subroutine fock_matrix
