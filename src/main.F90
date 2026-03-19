@@ -32,7 +32,7 @@ program HartreeFock
 
 
   ! get molecule, ao_basis, and n_occ
-  call read_input(molecule, ao_basis, n_occ)
+  call read_input(molecule, ao_basis, n_occ, n_cycles)
   n_ao = ao_basis%nao
 
   ! allocate all arrays
@@ -72,7 +72,6 @@ program HartreeFock
   tolerance_E = 1.D-9
   tolerance_D = 1.D-3 
   ! SCF loop
-  n_cycles = 50
   i = 1
   do while (i <= n_cycles)
 
@@ -87,7 +86,7 @@ program HartreeFock
 
     ! calculate HF energy for current cycle
     E_HF_new = sum((hcore + F) * D_new)
-    ! print *, "The Hartree-Fock energy:    ", E_HF_new, " of cycle: ", i       ! for debugging energy
+    print *, "The Hartree-Fock energy:    ", E_HF_new, " of cycle: ", i       ! for debugging energy
 
     ! if converged, exit SCF loop
     converged = convergence_check(E_HF_new, E_HF_old, D_new, D_old, tolerance_E, tolerance_D)
@@ -107,10 +106,11 @@ program HartreeFock
   if (converged) then
     print "(a, i3, a)", "The program has converged after ", i, " cycles."
     print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree."
+    print "(a, f10.5, a)", "The nuclear repulsion energy was ", E_nuc, " Hartree."
   else
     print "(a, i3, a)", "The program did not converged after ", n_cycles, " cycles."
-    print "(a, f10.5)", "The energy of the last cycle was ", E_HF_new
-    print "(a, f10.5)", "The energy of the second last cycle was ", E_HF_old
+    print "(a, f10.5, a)", "The energy of the last cycle was ", E_HF_new, " Hartree."
+    print "(a, f10.5, a)", "The energy of the second last cycle was ", E_HF_old, " Hartree."
   endif
 
 end program HartreeFock
