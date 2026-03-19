@@ -4,7 +4,7 @@ implicit none
 
 private
 
-public :: fock_matrix, density_matrix, convergence_check
+public :: fock_matrix, density_matrix, convergence_check, nuclear_repulsion_energy
 
 contains
 
@@ -53,12 +53,34 @@ contains
     bool = .true.
   endif
 
-  ! wrong convergence criteria
+  ! wrong convergence criteria, works with MO's not AO's
   ! if (sqrt(sum((matmul(F,D) - matmul(D,F))**2)) < convergence) then
   !   print*, "The program has converged at cycle ", i
   !   stop
   ! endif
   
   end function convergence_check
+
+  ! calculates the nuclear repulsion energy
+  real(8) function nuclear_repulsion_energy(molecule) result(energy)
+  use molecular_structure
+
+  type(molecular_structure_t), intent(in) :: molecule
+  real(8) :: distance
+  integer :: i, j
+  energy = 0
+
+  ! for each unique atom pair
+  do i = 1, molecule%num_atoms - 1
+    do j = i + 1, molecule%num_atoms
+      distance = (molecule%coord(1, i) - molecule%coord(1, j))**2 + &
+                 (molecule%coord(2, i) - molecule%coord(2, j))**2 + & 
+                 (molecule%coord(3, i) - molecule%coord(3, j))**2
+      distance = sqrt(distance)
+      energy = energy + (molecule%charge(i) * molecule%charge(j))/(distance)
+    enddo
+  enddo
+
+  end function nuclear_repulsion_energy
 
 end module

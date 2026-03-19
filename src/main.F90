@@ -19,7 +19,7 @@ program HartreeFock
 
   integer  :: n_ao, n_occ
   integer  :: kappa, lambda, i          ! loop integers
-  real(8)  :: E_HF_old, E_HF_new
+  real(8)  :: E_HF_old, E_HF_new, E_nuc
 
   real(8), allocatable :: hcore(:,:), V(:,:), T(:,:), S(:,:), ao_integrals(:,:,:,:)
   real(8), allocatable :: D_old(:,:), D_new(:,:), F(:,:)
@@ -98,13 +98,19 @@ program HartreeFock
     D_old    = D_new
 
     i = i + 1
-  enddo
+  enddo ! end of SCF loop
+
+  E_nuc = nuclear_repulsion_energy(molecule)
+  E_HF_new = E_HF_new + E_nuc
+  E_HF_old = E_HF_old + E_nuc
 
   if (converged) then
-    print "(a, i3, a)", "The program has converged after ", i, " cycles"
-    print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree"
+    print "(a, i3, a)", "The program has converged after ", i, " cycles."
+    print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree."
   else
-    print *, "The program did not converged after ", n_cycles, " cycles"
+    print "(a, i3, a)", "The program did not converged after ", n_cycles, " cycles."
+    print "(a, f10.5)", "The energy of the last cycle was ", E_HF_new
+    print "(a, f10.5)", "The energy of the second last cycle was ", E_HF_old
   endif
 
 end program HartreeFock
