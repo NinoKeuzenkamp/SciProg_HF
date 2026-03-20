@@ -86,7 +86,7 @@ program HartreeFock
 
     ! calculate HF energy for current cycle
     E_HF_new = sum((hcore + F) * D_new)
-    print *, "The Hartree-Fock energy:    ", E_HF_new, " of cycle: ", i       ! for debugging energy
+    ! print *, "The Hartree-Fock energy:    ", E_HF_new + E_nuc, " of cycle: ", i       ! for debugging energy
 
     ! if converged, exit SCF loop
     converged = convergence_check(E_HF_new, E_HF_old, D_new, D_old, tolerance_E, tolerance_D)

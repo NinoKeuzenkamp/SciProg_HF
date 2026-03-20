@@ -73,9 +73,7 @@ contains
   ! for each unique atom pair
   do i = 1, molecule%num_atoms - 1
     do j = i + 1, molecule%num_atoms
-      distance = (molecule%coord(1, i) - molecule%coord(1, j))**2 + &
-                 (molecule%coord(2, i) - molecule%coord(2, j))**2 + & 
-                 (molecule%coord(3, i) - molecule%coord(3, j))**2
+      distance = sum((molecule%coord(:, i) - molecule%coord(:, j))**2)
       distance = sqrt(distance)
       energy = energy + (molecule%charge(i) * molecule%charge(j))/(distance)
     enddo
