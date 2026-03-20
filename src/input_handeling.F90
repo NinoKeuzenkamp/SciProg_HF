@@ -35,7 +35,7 @@ contains
 
         open(unit, file=inputfile)
         ! FORMAT OF FILE:  (contracted orbitals NOT implemented)
-        ! n_atoms total_charge_SYSTEM n_cycles
+        ! n_atoms total_charge_SYSTEM max_SCF_cycles
         ! x y z charge (for each atom in angstrom)
         ! atom_index angular_momentum coefficient (for each orbital)
 
@@ -92,6 +92,7 @@ contains
         character(32), intent(out) :: outfile
 
         print "(/, a)", "Please input the path for your output txt file. (max 32 characters)"
+        print *, "Note that the program cannot make new folders"
         read "(a32)", outfile
     end subroutine get_output_file
 

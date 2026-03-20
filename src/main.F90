@@ -118,6 +118,7 @@ program HartreeFock
   energy%HF     = energy%HF + energy%nuc
   energy%HF_old = energy%HF_old + energy%nuc
 
+  ! print "(a27, a, a5)", "Results are written to the ", outfile, " file"
   call write_to_file(molecule, energy, outfile, converged, i)
 
 end program HartreeFock
