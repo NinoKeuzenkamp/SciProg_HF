@@ -22,4 +22,11 @@ type energy_type
     real(8) :: MP2      = 0
 end type
 
+! for a certain atom (defined by nuclear charge), assign all angular momentum to a exponent 
+type atomic_orbital
+    real(8), allocatable :: angular(:)
+    real(8), allocatable :: exponents(:)
+    real(8)              :: charge
+end type
+
 end module
