@@ -4,11 +4,11 @@ implicit none
 
 private
 
-public :: read_input
+public :: read_input_file, get_output_file
 
 contains
 
-    subroutine read_input(molecule, ao_basis, n_occ, n_cycles)
+    subroutine read_input_file(molecule, ao_basis, n_occ, n_cycles)
         use molecular_structure
         use ao_basis
 
@@ -29,7 +29,7 @@ contains
 
 
         ! get user inputfile
-        print *, "Please type the path to your input txt file. (max 32 characters)"
+        print "(/, a)", "Please type the path to your input txt file. (max 32 characters)"
         read "(a32)", inputfile
 
 
@@ -85,6 +85,14 @@ contains
             n_occ = n_electron/2
         endif
         
-    end subroutine
+    end subroutine read_input_file
+
+    ! ask where the user wants to place the results
+    subroutine get_output_file(outfile)
+        character(32), intent(out) :: outfile
+
+        print "(/, a)", "Please input the path for your output txt file. (max 32 characters)"
+        read "(a32)", outfile
+    end subroutine get_output_file
 
 end module

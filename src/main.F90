@@ -9,6 +9,8 @@ program HartreeFock
   use diagonalization
   use fock_implementation
   use input_handeling
+  use output
+  use types
 
   implicit none
 
@@ -17,9 +19,9 @@ program HartreeFock
   ! Variable containing the atomic orbital basis
   type(basis_set_info_t) :: ao_basis
 
-  integer  :: n_ao, n_occ
-  integer  :: kappa, lambda, i          ! loop integers
-  real(8)  :: E_HF_old, E_HF_new, E_nuc
+  integer           :: n_ao, n_occ
+  integer           :: kappa, lambda, i          ! loop integers
+  type(energy_type) :: energy                    ! collection of energy variables (results)
 
   real(8), allocatable :: hcore(:,:), V(:,:), T(:,:), S(:,:), ao_integrals(:,:,:,:)
   real(8), allocatable :: D_old(:,:), D_new(:,:), F(:,:)
@@ -28,12 +30,16 @@ program HartreeFock
   ! for SCF loop
   integer :: n_cycles
   real(8) :: tolerance_E, tolerance_D
-  logical :: converged
+  logical :: converged        ! = true if the SCF cycle converged
+
+  character(32) :: outfile
 
 
   ! get molecule, ao_basis, and n_occ
-  call read_input(molecule, ao_basis, n_occ, n_cycles)
+  call read_input_file(molecule, ao_basis, n_occ, n_cycles)
   n_ao = ao_basis%nao
+
+  call get_output_file(outfile)
 
   ! allocate all arrays
   allocate(S(n_ao,n_ao))
@@ -62,7 +68,7 @@ program HartreeFock
   call density_matrix(D_old, C, n_ao, n_occ)
 
   ! calculate energy of core-only system
-  E_HF_old = sum((hcore + F) * D_old)
+  energy%HF_old = sum(hcore * D_old)
   
   ! Compute all 2-electron integrals
   call generate_2int (ao_basis,ao_integrals)
@@ -85,33 +91,34 @@ program HartreeFock
     call density_matrix(D_new, C, n_ao, n_occ)
 
     ! calculate HF energy for current cycle
-    E_HF_new = sum((hcore + F) * D_new)
-    ! print *, "The Hartree-Fock energy:    ", E_HF_new + E_nuc, " of cycle: ", i       ! for debugging energy
+    energy%HF = sum((hcore + F) * D_new)
+
+    ! print energy every 5th cycle
+    if (mod(i, 5) == 1) then
+      print "(a, f17.10, a, i4)", "The Hartree-Fock energy:    ", energy%HF + energy%nuc, " Ha of cycle: ", i
+    endif
+   
 
     ! if converged, exit SCF loop
-    converged = convergence_check(E_HF_new, E_HF_old, D_new, D_old, tolerance_E, tolerance_D)
-    if (converged) exit
+    converged = convergence_check(energy%HF, energy%HF_old, D_new, D_old, tolerance_E, tolerance_D)
+    if (converged) then
+      print "(a, i4)", "Program converged on cycle ", i
+    exit
+    endif
 
     ! re-initialise "old" variables before entering the next cycle
-    E_HF_old = E_HF_new
+    energy%HF_old = energy%HF
     D_old    = D_new
 
     i = i + 1
   enddo ! end of SCF loop
 
-  E_nuc = nuclear_repulsion_energy(molecule)
-  E_HF_new = E_HF_new + E_nuc
-  E_HF_old = E_HF_old + E_nuc
+  ! also add nuclear repulsion energy to total energy
+  energy%nuc    = nuclear_repulsion_energy(molecule)
+  energy%HF     = energy%HF + energy%nuc
+  energy%HF_old = energy%HF_old + energy%nuc
 
-  if (converged) then
-    print "(a, i3, a)", "The program has converged after ", i, " cycles."
-    print "(a, f10.5, a)", "The energy has converged to ", E_HF_new, " Hartree."
-    print "(a, f10.5, a)", "The nuclear repulsion energy was ", E_nuc, " Hartree."
-  else
-    print "(a, i3, a)", "The program did not converged after ", n_cycles, " cycles."
-    print "(a, f10.5, a)", "The energy of the last cycle was ", E_HF_new, " Hartree."
-    print "(a, f10.5, a)", "The energy of the second last cycle was ", E_HF_old, " Hartree."
-  endif
+  call write_to_file(molecule, energy, outfile, converged, i)
 
 end program HartreeFock
 
