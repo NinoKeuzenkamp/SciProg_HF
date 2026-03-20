@@ -120,9 +120,9 @@ program HartreeFock
   energy%HF     = energy%HF + energy%nuc
   energy%HF_old = energy%HF_old + energy%nuc
 
-  print *, "Program has finished."
+  print "(a)", "Program has finished."
   call write_to_file(molecule, energy, outfile, converged, i, eps, n_occ)
-  print *, "Results have been written to the file"
+  print "(a)", "Results have been written to the file"
 
 end program HartreeFock
 
