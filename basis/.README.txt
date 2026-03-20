@@ -1,0 +1,21 @@
+This folder should contain the basis sets but it is not required
+
+There is a specific format you should use so there are some example files provided
+
+NOTE contracted orbitals NOT implemented
+
+example of basis with 3 s-orbitals per for hydrogen (optimal_H2.txt):
+
+! 1 number:
+! number of atoms defined in basis from hydrogen to higher weights (you cannot skip atoms)
+1
+
+! 1 number
+! number of functions for this atom 
+3
+
+! 2 numbers
+! angular momentum + exponent
+0 0.16886
+0 0.62391
+0 3.42525
