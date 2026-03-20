@@ -30,8 +30,15 @@ contains
         enddo
 
         write(unit, "(/, a)") "HARTREE FOCK RESULTS (in Ha)"
+
+        ! print all energies from the SCF cycle 
+        write(unit, *) "ENERGIES FROM SCF CYCLES"
+        do i = 1, cycles
+            write(unit, "(f17.10, a, i4)") energy%HF + energy%nuc, " CYCLE: ", i
+        enddo
+
         if (converged) then
-            write(unit, "(a, i4, a)") "PROGRAM CONVERGED AFTER ", cycles, " CYCLES"
+            write(unit, "(/, a, i4, a)") "PROGRAM CONVERGED AFTER ", cycles, " CYCLES"
             write(unit, "(a, t30, f17.10)") "ELECTRONIC ENERGY: ",         energy%HF - energy%nuc
             write(unit, "(a, t30, f17.10)") "NUCLEAR REPULSION ENERGY: ",  energy%nuc
             write(unit, "(a, t30, f17.10)") "TOTAL HARTREE FOCK ENERGY: ",        energy%HF

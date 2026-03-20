@@ -17,7 +17,8 @@ end type
 ! collect all energy terms in the same type
 type energy_type
     real(8) :: HF       = 0
-    real(8) :: HF_old   = 0         ! HF energy of previous cycle
+    real(8) :: HF_old   = 0             ! HF energy of previous cycle
+    real(8), allocatable :: all_HF(:)   ! all energies from SCF cycle, is printed to output
     real(8) :: nuc      = 0
     real(8) :: MP2      = 0
 end type

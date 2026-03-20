@@ -38,6 +38,7 @@ program HartreeFock
   ! get molecule, ao_basis, and n_occ
   call read_input_file(molecule, ao_basis, n_occ, n_cycles)
   n_ao = ao_basis%nao
+  allocate(energy%all_HF(n_cycles))
 
   call get_output_file(outfile)
 
@@ -92,18 +93,19 @@ program HartreeFock
 
     ! calculate HF energy for current cycle
     energy%HF = sum((hcore + F) * D_new)
+    energy%all_HF(i) = energy%HF
 
-    ! print energy every 5th cycle
-    if (mod(i, 5) == 1) then
-      print "(a, f17.10, a, i4)", "The Hartree-Fock energy:    ", energy%HF + energy%nuc, " Ha of cycle: ", i
-    endif
+    ! ! print energy every 5th cycle
+    ! if (mod(i, 5) == 1) then
+    !   print "(a, f17.10, a, i4)", "The Hartree-Fock energy: ", energy%HF + energy%nuc, " Ha of cycle: ", i
+    ! endif
    
 
     ! if converged, exit SCF loop
     converged = convergence_check(energy%HF, energy%HF_old, D_new, D_old, tolerance_E, tolerance_D)
     if (converged) then
-      print "(a, i4)", "Program converged on cycle ", i
-    exit
+      print "(/, a, i4)", "Program converged on cycle ", i
+      exit
     endif
 
     ! re-initialise "old" variables before entering the next cycle
@@ -114,11 +116,13 @@ program HartreeFock
   enddo ! end of SCF loop
 
   ! also add nuclear repulsion energy to total energy
-  energy%nuc    = nuclear_repulsion_energy(molecule)
+  energy%nuc = nuclear_repulsion_energy(molecule)
   energy%HF     = energy%HF + energy%nuc
   energy%HF_old = energy%HF_old + energy%nuc
 
+  print *, "Program has finished."
   call write_to_file(molecule, energy, outfile, converged, i)
+  print *, "Results have been written to the file"
 
 end program HartreeFock
 
