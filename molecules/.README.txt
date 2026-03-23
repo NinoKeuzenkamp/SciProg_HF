@@ -1,13 +1,11 @@
 This folder should contain the input files but it is not required
-
 There is a specific format you should use so there are some example files provided
 
-Example with explainations of H2 (H2.txt):
-
+Example with explainations of H2 molecule (H2.txt):
 # 3 numbers:
-# 1st n_atoms 
-# 2nd total_charge_SYSTEM 
-# 3rd max_SCF_cycles
+# 1st number of atoms 
+# 2nd total charge of the SYSTEM 
+# 3rd max SCF cycles
 2 0 50
 
 # 4 numbers:
