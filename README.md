@@ -1,2 +1,4 @@
 # SciProg_HF
-Hartree Fock program for assignment Scientific Computing and Programming
+Hartree Fock program for an assignment for the Scientific Computing and Programming course
+
+Documentation is in the doc/ folder.
