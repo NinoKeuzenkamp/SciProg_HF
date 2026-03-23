@@ -71,7 +71,7 @@ program HartreeFock
 
 
   ! set tolerances for convergence
-  tolerance_E = 1.D-9     ! in Hartree
+  tolerance_E = 1.D-6     ! in Hartree
   tolerance_D = 1.D-3 
   ! SCF loop
   i = 1
