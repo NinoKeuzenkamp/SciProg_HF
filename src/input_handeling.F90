@@ -8,6 +8,7 @@ public :: read_input_file, get_output_file
 
 contains
 
+    ! read input from userfiles
     subroutine read_input_file(molecule, ao_basis, n_occ, n_cycles)
         use molecular_structure
         use ao_basis
@@ -17,15 +18,14 @@ contains
         type(basis_set_info_t),      intent(out) :: ao_basis
         integer,                     intent(out) :: n_occ, n_cycles
 
-        integer :: total_charge_sys, n_electron
+        integer :: n_electron
 
 
         ! gets the following variables
-        call read_molecule(molecule, total_charge_sys, n_cycles, n_electron)
+        call read_molecule(molecule, n_cycles, n_electron)
 
         ! gets the ao_basis variable
         call read_basis(ao_basis, molecule)
-
 
         ! make sure n_electron is always a whole number
         if (mod(n_electron, 2) == 1) then   ! add implementation for unrestricted HF here
@@ -38,15 +38,15 @@ contains
 
 
     ! FOR MOLECULE COORDINATES
-    subroutine read_molecule(molecule, total_charge_sys, n_cycles, n_electron)
+    subroutine read_molecule(molecule, n_cycles, n_electron)
         use molecular_structure
         type(molecular_structure_t), intent(out) :: molecule
-        integer, intent(out) :: total_charge_sys, n_cycles, n_electron
+        integer,                     intent(out) :: n_cycles, n_electron
 
-        integer :: n_atoms, i               
+        integer :: n_atoms, total_charge_sys, i              
         real(8), allocatable :: coords(:, :), charge(:)     ! coords and charge of atoms to add to molecule-type
 
-        character(32)      :: inputfile         ! user input file path
+        character(32)      :: inputfile         ! user input file path, see README.txt to see format of file
         integer, parameter :: unit = 21
 
 
@@ -83,15 +83,15 @@ contains
         use ao_basis
         use types
         type(molecular_structure_t), intent(in) :: molecule
-        type(basis_set_info_t), intent(out)     :: ao_basis
+        type(basis_set_info_t),      intent(out):: ao_basis
 
         type(atomic_orbital),   allocatable :: AO(:)          ! store orbital exponents and angular momenta for each atom
         
-        integer :: largest_charge    ! largest atom defined by basis
+        integer :: largest_charge    ! largest charge = largest atom defined in basis
         integer :: n_ao              ! number of AO's per atom
 
         integer :: i, j, charge
-        character(32)      :: inputfile         ! user input file path
+        character(32)      :: inputfile         ! user input file path, see README.txt to see format of file
         integer, parameter :: unit = 21
 
 
@@ -100,7 +100,7 @@ contains
         read "(a32)", inputfile
         open(unit, file=inputfile)
 
-        ! allocate such that each atom has a "AO" variable
+        ! create an AO-type for each atom defined in basis
         read(unit, *) largest_charge
         allocate(AO(largest_charge))
 
@@ -111,7 +111,7 @@ contains
             read(unit, *) n_ao
             allocate(AO(i)%angular(n_ao), AO(i)%exponents(n_ao))
 
-            ! for each AO in the file
+            ! for each of those AO's
             do j = 1, n_ao
                 
                 ! place AO data in AO-type
@@ -123,6 +123,7 @@ contains
 
 
         ! add atomic basis functions to "ao_basis" for each atom in the molecule
+        ! i.e. if there is a carbon atom in the molecule, then add the carbon AO's to that position
         do i = 1, molecule%num_atoms
             ! shorter notation, "charge of atom to which the AO's need to be assigned"
             charge = int(molecule%charge(i))

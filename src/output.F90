@@ -23,22 +23,21 @@ contains
         integer :: i
 
         open(unit, file=outfile, action = "write")
-
         write(unit, "(a, /)") "RESULTS OF CALCULATION"
 
         ! write all coords and their charge
-        write(unit, "(a)") "ATOM COORDINATES AND CHARGE:"
+        write(unit, "(a)") "ATOM COORDINATES (A) AND CHARGE:"
         do i = 1, molecule%num_atoms
-            write(unit, "(3f10.5, f5.2)") molecule%coord(:,i) * 0.529177D0, molecule%charge(i)
+            write(unit, "(3f10.5, f5.2)") molecule%coord(:,i) * 0.529177D0, molecule%charge(i)  ! convert back to angstrom
         enddo
 
         ! start of energy results
-        write(unit, "(/, a)") "HARTREE FOCK RESULTS (in Ha)"
+        write(unit, "(/, a)") "HARTREE FOCK RESULTS (in Hartree)"
 
         ! write all energies from the SCF cycle 
         write(unit, "(a)") "ENERGIES FROM SCF CYCLES:"
         do i = 1, cycles
-            write(unit, "(f17.10, a, i4)") energy%all_HF(i) + energy%nuc, " CYCLE: ", i
+            write(unit, "(f17.10, a, i4)") energy%all_SCF(i) + energy%nuc, " CYCLE: ", i
         enddo
 
         if (converged) then
@@ -57,8 +56,6 @@ contains
         else
             write(unit, "(a, i4, a)") "PROGRAM DID NOT CONVERGE AFTER ", cycles, " CYCLES"
         endif
-
-
 
 
         close(unit)

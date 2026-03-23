@@ -14,10 +14,8 @@ program HartreeFock
 
   implicit none
 
-  ! Variable containing the molecular structure
   type(molecular_structure_t) :: molecule
-  ! Variable containing the atomic orbital basis
-  type(basis_set_info_t) :: ao_basis
+  type(basis_set_info_t)      :: ao_basis
 
   integer           :: n_ao, n_occ
   integer           :: kappa, lambda, i          ! loop integers
@@ -30,19 +28,18 @@ program HartreeFock
   ! for SCF loop
   integer :: n_cycles
   real(8) :: tolerance_E, tolerance_D
-  logical :: converged        ! = true if the SCF cycle converged
+  logical :: converged        ! true if the SCF cycle converged
 
   character(32) :: outfile
 
 
-  ! get molecule, ao_basis, and n_occ
+  ! get molecule, ao_basis, n_occ, n_cycles, outfile
   call read_input_file(molecule, ao_basis, n_occ, n_cycles)
   n_ao = ao_basis%nao
-  allocate(energy%all_HF(n_cycles))
-
   call get_output_file(outfile)
 
   ! allocate all arrays
+  allocate(energy%all_SCF(n_cycles))
   allocate(S(n_ao,n_ao))
   allocate(T(n_ao,n_ao))
   allocate(V(n_ao,n_ao))
@@ -63,12 +60,10 @@ program HartreeFock
   hcore = T - V
 
   ! Diagonalize the fock matrix
-  call solve_genev (hcore,S,C,eps)
-
   ! Form the density matrix
-  call density_matrix(D_old, C, n_ao, n_occ)
-
   ! calculate energy of core-only system
+  call solve_genev (hcore,S,C,eps)
+  call density_matrix(D_old, C, n_ao, n_occ)
   energy%HF_old = sum(hcore * D_old)
   
   ! Compute all 2-electron integrals
@@ -76,32 +71,24 @@ program HartreeFock
 
 
   ! set tolerances for convergence
-  tolerance_E = 1.D-9
+  tolerance_E = 1.D-9     ! in Hartree
   tolerance_D = 1.D-3 
   ! SCF loop
   i = 1
   do while (i <= n_cycles)
 
     ! calculate fock matrix
-    call fock_matrix(F, D_old, hcore, ao_integrals, n_ao)
-
     ! diagonalise fock matrix
-    call solve_genev (F,S,C,eps)
-
     ! form the density matrix
+    call fock_matrix(F, D_old, hcore, ao_integrals, n_ao)
+    call solve_genev (F,S,C,eps)
     call density_matrix(D_new, C, n_ao, n_occ)
 
     ! calculate HF energy for current cycle
     energy%HF = sum((hcore + F) * D_new)
-    energy%all_HF(i) = energy%HF
-
-    ! ! print energy every 5th cycle
-    ! if (mod(i, 5) == 1) then
-    !   print "(a, f17.10, a, i4)", "The Hartree-Fock energy: ", energy%HF + energy%nuc, " Ha of cycle: ", i
-    ! endif
+    energy%all_SCF(i) = energy%HF
    
-
-    ! if converged, exit SCF loop
+    ! convergence check
     converged = convergence_check(energy%HF, energy%HF_old, D_new, D_old, tolerance_E, tolerance_D)
     if (converged) then
       print "(/, a, i4)", "Program converged on cycle ", i
@@ -110,7 +97,7 @@ program HartreeFock
 
     ! re-initialise "old" variables before entering the next cycle
     energy%HF_old = energy%HF
-    D_old    = D_new
+    D_old         = D_new
 
     i = i + 1
   enddo ! end of SCF loop
