@@ -103,9 +103,9 @@ program HartreeFock
   enddo ! end of SCF loop
 
   ! also add nuclear repulsion energy to total energy
-  energy%nuc = nuclear_repulsion_energy(molecule)
-  energy%HF     = energy%HF + energy%nuc
-  energy%HF_old = energy%HF_old + energy%nuc
+  energy%nuc    = nuclear_repulsion_energy(molecule)
+  energy%HF     = energy%HF
+  energy%HF_old = energy%HF_old
 
   print "(a)", "Program has finished."
   call write_to_file(molecule, energy, outfile, converged, i, eps, n_occ)

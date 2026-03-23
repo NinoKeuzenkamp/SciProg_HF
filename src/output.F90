@@ -43,13 +43,13 @@ contains
         if (converged) then
             write(unit, "(/, a, i4, a)") "PROGRAM CONVERGED AFTER ", cycles, " CYCLES"
 
-            write(unit, "(a, t30, f11.6)") "ELECTRONIC ENERGY: ",         energy%HF - energy%nuc
+            write(unit, "(a, t30, f11.6)") "ELECTRONIC ENERGY: ",         energy%HF
             write(unit, "(a, t30, f11.6)") "NUCLEAR REPULSION ENERGY: ",  energy%nuc
-            write(unit, "(a, t30, f11.6)") "TOTAL HARTREE FOCK ENERGY: ", energy%HF
+            write(unit, "(a, t30, f11.6)") "TOTAL HARTREE FOCK ENERGY: ", energy%HF + energy%nuc
 
             write(unit, "(/, a)") "EIGENVALUES OF FILLED ORBITALS:"
             do i = 1, n_occ
-                write(unit, "(a, i3, f11.6)") "Molecular orbital: ", i, eps(i)
+                write(unit, "(a, i3, a, f11.6)") "Molecular orbital: ", i, " ENERGY: ", eps(i)
             enddo
 
             write(unit, "(/, a, f11.6)") "HOMO-LUMO GAP:", abs(eps(n_occ) - eps(n_occ + 1))
