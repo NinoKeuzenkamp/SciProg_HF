@@ -1,0 +1,39 @@
+This program calculates the Hartree Fock energy of a molecular system in a certain atomic basis from information that is specified by the user.
+This program works by calculating the core Hamiltonian matrix from the one electron integrals. This matrix is diagonalised, and the results are used to make the density matrix.
+Then the program enters the SCF cycle, here the core Hamiltonian, density matrix, and the two electron integrals are used to create the Fock matrix. This is diagonalised to make the density matrix. Then the energy is calculated. If the density matrix and energy have converged, the SCF cycle ends. Once the cycle has converged or the max cycles have been reached, the program writes the results to a file.
+
+Description of the modules:
+  input_handeling.F90:
+This modules has two (public) subroutines. The goal of this module is to get the input files from the user, process them and send the data to the main program.
+The module reads the coordinates and charge of all the atoms from a file and turns it into a molecule_structure_t-type. Using the charge of the system and of all the atoms, the module determines the number of occupied orbitals. From another file, the information regarding the basis is read and turned into a basis_set_info_t-type.
+The module also read the maximum number of SCF cycles and the user-designated output file.
+To see an example of these input files, look at the .README.txt files in the "basis" and "molecules" folders.
+
+  fock_implementation.F90:
+This module has two subroutines and two functions. This module contains the code required for the Fock matrix implementation.
+subroutine fock_matrix creates the Fock matrix.
+subroutine density_matrix creates the density matrix.
+function convergence_check compared the current SCF cycle with the last and returns true if the energy and density have converged.
+function nuclear_repulsion_energy calculates and returns the nuclear repulsion energy of a molecule.
+
+  output.F90:
+This module contains one subroutine that write all the results to a file (that the user gave in a prompt).
+
+  derivedtypes.F90
+This module contains three derived types, these exist to group similar data together (for later use). 
+type calculation_preset contains logicals that are true if the setting is turned on. For instance, if the user wants include MP2 correction, then the logical is set to true. (this type is currently not used)
+type energy_type groups all the energies together. This includes: nuclear repulsion energy, final HF electronic energy, second last HF electronic energy, all electronic energies from the SCF cycles.
+type atomic_orbital contains arrays the angular momenta with their exponents for each defined atom in the basis. This type exists to make adding an atomic orbital to the basis easier.
+
+
+Example input with the H2 molecule:
+First "make" the program in the terminal and then run it with "./myapp"
+
+The program will prompt you three times
+For the molecule file path  -> molecules/H2.txt
+For the basis file path -> basis/optimal_H2.txt
+For the output file path -> output.txt
+
+The program will run and the results are written to the output.txt file
+
+In the "molecules" and" basis" folders there are some other txt files that you can use to test the program.
