@@ -23,7 +23,7 @@ program HartreeFock
   integer           :: n_ao, n_occ
   integer           :: kappa, lambda, i          ! loop integers
   type(energy_type) :: energy                    ! collection of energy variables (results)
-  type(calculation_preset) :: preset             ! see derivedtypes.F90
+  type(calculation_preset) :: preset             ! see derivedtypes.F90,  options/settings might be a better name for this
 
   real(8), allocatable :: hcore(:,:), V(:,:), T(:,:), S(:,:), ao_integrals(:,:,:,:)
   real(8), allocatable :: D_old(:,:), D_new(:,:), F(:,:)
@@ -35,7 +35,7 @@ program HartreeFock
   logical :: converged        ! true if the SCF cycle converged
 
   character(32) :: outfile
-  real(8)       :: time_start, time_end
+  real(8)       :: time_start, time_end ! to keep track of the time elapsed
 
   call cpu_time(time_start)
 
@@ -114,16 +114,18 @@ program HartreeFock
   energy%HF_old = energy%HF_old
 
   call cpu_time(time_end)
-  print "(a, f10.7, a)", "The program took ", time_end-time_start, " seconds to finish the SCF loop."
+  print "(a, f10.5, a)", "The program took ", time_end-time_start, " seconds to finish the SCF loop."
+  call cpu_time(time_start)
 
   ! if MP2 is enabled
   if (preset%MP2) then
     print "(/, a)", "Now starting MP2 correlation energy calculation."
     energy%MP2 = MP2_energy(ao_integrals, C, eps, n_occ, n_ao)
     call cpu_time(time_end)
-    print "(a, f10.7, a)", "The program took ", time_end-time_start, " seconds to finish the MP2 correlation energy calculation."
+    print "(a, f10.5, a)", "The program took ", time_end-time_start, " seconds to finish the MP2 correlation energy calculation."
   endif
 
+  ! i is the last cycle of the SCF loop!
   call write_to_file(molecule, energy, outfile, converged, i, eps, n_occ, preset)
   print "(/, a)", "Result file has been made."
 
