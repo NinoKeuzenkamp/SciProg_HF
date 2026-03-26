@@ -11,6 +11,7 @@ program HartreeFock
   use input_handeling
   use output
   use types
+  use MP2
 
   implicit none
 
@@ -20,6 +21,7 @@ program HartreeFock
   integer           :: n_ao, n_occ
   integer           :: kappa, lambda, i          ! loop integers
   type(energy_type) :: energy                    ! collection of energy variables (results)
+  type(calculation_preset) :: preset             ! see derivedtypes.F90
 
   real(8), allocatable :: hcore(:,:), V(:,:), T(:,:), S(:,:), ao_integrals(:,:,:,:)
   real(8), allocatable :: D_old(:,:), D_new(:,:), F(:,:)
@@ -34,7 +36,7 @@ program HartreeFock
 
 
   ! get molecule, ao_basis, n_occ, n_cycles, outfile
-  call read_input_file(molecule, ao_basis, n_occ, n_cycles)
+  call read_input(molecule, ao_basis, n_occ, n_cycles, preset)
   n_ao = ao_basis%nao
   call get_output_file(outfile)
 
@@ -107,8 +109,14 @@ program HartreeFock
   energy%HF     = energy%HF
   energy%HF_old = energy%HF_old
 
+  ! if MP2 is enabled
+  if (preset%MP2) then
+    energy%MP2 = MP2_energy(ao_integrals, C, eps, n_occ, n_ao)
+  endif
+
+
   print "(a)", "Program has finished."
-  call write_to_file(molecule, energy, outfile, converged, i, eps, n_occ)
+  call write_to_file(molecule, energy, outfile, converged, i, eps, n_occ, preset)
   print "(a)", "Results have been written to the file"
 
 end program HartreeFock
