@@ -4,12 +4,12 @@ implicit none
 
 private
 
-public :: read_input_file, get_output_file
+public :: read_input, get_output_file
 
 contains
 
     ! read input from userfiles
-    subroutine read_input_file(molecule, ao_basis, n_occ, n_cycles)
+    subroutine read_input(molecule, ao_basis, n_occ, n_cycles, preset)
         use molecular_structure
         use ao_basis
         use types
@@ -17,8 +17,10 @@ contains
         type(molecular_structure_t), intent(out) :: molecule
         type(basis_set_info_t),      intent(out) :: ao_basis
         integer,                     intent(out) :: n_occ, n_cycles
+        type(calculation_preset),    intent(out) :: preset
 
         integer :: n_electron
+        character:: bool
 
 
         ! gets the following variables
@@ -27,6 +29,20 @@ contains
         ! gets the ao_basis variable
         call read_basis(ao_basis, molecule)
 
+        ! does the user want MP2?
+        print "(/, a)", "Do you want to include MP2? (y/n)"
+        read "(a1)", bool
+
+        if (bool == "y") then
+            preset%MP2 = .true.
+        elseif (bool == "n") then
+            ! false by default
+            ! preset%MP2 = .false
+        else 
+            print "(a)", "The input was neither y nor n, the program will terminate"
+            stop
+        endif
+
         ! make sure n_electron is always a whole number
         if (mod(n_electron, 2) == 1) then   ! add implementation for unrestricted HF here
             stop "The number of electrons cannot be odd"
@@ -34,7 +50,7 @@ contains
             n_occ = n_electron/2
         endif
         
-    end subroutine read_input_file
+    end subroutine read_input
 
 
     ! FOR MOLECULE COORDINATES

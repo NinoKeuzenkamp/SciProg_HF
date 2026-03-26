@@ -1,0 +1,5 @@
+MP2 correction energy E_MP2 = E_HF + E(2)
+E(2) is a second order pertubation caused by the double excitation of filled MOLECULAR orbitals
+E(2) = sum(over all unique double excitation) (<ij||ab>)^2/ e_a + e_b - e_i - e_j
+i j a and b are molecular orbitals
+so for each <ij||ab>, we need to multiply the four coefficients of the atomic orbitals with the correct 2-electron integral in the AO basis
