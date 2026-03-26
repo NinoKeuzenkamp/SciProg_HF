@@ -2,9 +2,11 @@ This program calculates the Hartree Fock energy of a molecular system in a certa
 This program works by calculating the core Hamiltonian matrix from the one electron integrals. This matrix is diagonalised, and the results are used to make the density matrix.
 Then the program enters the SCF cycle, here the core Hamiltonian, density matrix, and the two electron integrals are used to create the Fock matrix. This is diagonalised to make the density matrix. Then the energy is calculated. If the density matrix and energy have converged, the SCF cycle ends. Once the cycle has converged or the max cycles have been reached, the program writes the results to a file.
 
+NOTE: MP2 implementation uses the ao_integrals (chemist notation) to calculate the MO integrals. This can be done by using the physicist notation or the chemist notation. If we use the chemist notation for the MO integrals, the energy correction becomes positive (~0.0436 for H2 with optimal_H2 basis), which it should not be for this system. By using the physicist notation, the energy correction is ~-0.0177 for the same system. This value is quite large and results in the total energy (HF + nuc + MP2) being significantly lower than the database reference (STO-3G). I believe that the difference come from the difference in the basis sets and I will assume that my energy correction is correct. 
+
 Description of the modules:
   input_handeling.F90:
-This modules has two (public) subroutines. The goal of this module is to get the input files from the user, process them and send the data to the main program.
+This modules has two (public) subroutines. The goal of this module is to get the input files and other data from the user, process them and send the data to the main program.
 The module reads the coordinates and charge of all the atoms from a file and turns it into a molecule_structure_t-type. Using the charge of the system and of all the atoms, the module determines the number of occupied orbitals. From another file, the information regarding the basis is read and turned into a basis_set_info_t-type.
 The module also read the maximum number of SCF cycles and the user-designated output file.
 To see an example of these input files, look at the .README.txt files in the "basis" and "molecules" folders.
@@ -21,9 +23,12 @@ This module contains one subroutine that write all the results to a file (that t
 
   derivedtypes.F90
 This module contains three derived types, these exist to group similar data together (for later use). 
-type calculation_preset contains logicals that are true if the setting is turned on. For instance, if the user wants include MP2 correction, then the logical is set to true. (this type is currently not used)
+type calculation_preset contains logicals that are true if the setting is turned on. For instance, if the user wants include MP2 correction, then the logical is set to true.
 type energy_type groups all the energies together. This includes: nuclear repulsion energy, final HF electronic energy, second last HF electronic energy, all electronic energies from the SCF cycles.
 type atomic_orbital contains arrays the angular momenta with their exponents for each defined atom in the basis. This type exists to make adding an atomic orbital to the basis easier.
+
+  MP2_implementation.F90
+This module calculates the MP2 (correlation) energy. This is done by summing over all possible double exitations from filled orbital, i and j, to empty orbitals, a and b, and calculating the energy using a formula. For this formula, there are two ways to write it, chemist notation and physicist notation (see note above for more detail). In both formulas, we need the MO integrals, which are computed from the AO integrals in a separate function. 
 
 
 Example input with the H2 molecule:
@@ -32,6 +37,7 @@ First "make" the program in the terminal and then run it with "./myapp"
 The program will prompt you three times
 For the molecule file path  -> molecules/H2.txt
 For the basis file path -> basis/optimal_H2.txt
+For MP2 correlation energy -> y/n  
 For the output file path -> output.txt
 
 The program will run and the results are written to the output.txt file
