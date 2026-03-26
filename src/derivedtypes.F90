@@ -9,7 +9,7 @@ public :: calculation_preset, energy_type, atomic_orbital
 
 
 ! to store the user input & data about the calculation
-! examples: user wants MP2. UHF instead of RHF
+! examples: user wants MP2. User wants UHF instead of RHF
 type calculation_preset
     logical :: UHF = .false.        ! RHF by default
     logical :: MP2 = .false.
