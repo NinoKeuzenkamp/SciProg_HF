@@ -46,12 +46,11 @@ contains
 
             write(unit, "(a, t30, f11.6)") "ELECTRONIC ENERGY: ",         energy%HF
             write(unit, "(a, t30, f11.6)") "NUCLEAR REPULSION ENERGY: ",  energy%nuc
+            write(unit, "(a, t30, f11.6)") "TOTAL HARTREE FOCK ENERGY: ", energy%HF + energy%nuc
 
             if (preset%MP2) then
-                write(unit, "(a, t30, f11.6)") "MP2 CORRELATION ENERGY: ",    energy%MP2
-                write(unit, "(a, t30, f11.6)") "TOTAL HARTREE FOCK ENERGY: ", energy%HF + energy%nuc + energy%MP2
-            else
-                write(unit, "(a, t30, f11.6)") "TOTAL HARTREE FOCK ENERGY: ", energy%HF + energy%nuc
+                write(unit, "(a, t30, f11.6)") "MP2 CORRELATION ENERGY: ",  energy%MP2
+                write(unit, "(a, t30, f11.6)") "TOTAL ENERGY WITH MP2: ",   energy%HF + energy%nuc + energy%MP2 
             endif
 
             write(unit, "(/, a)") "EIGENVALUES OF FILLED ORBITALS:"
