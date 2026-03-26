@@ -3,6 +3,8 @@ program HartreeFock
   ! Demonstration program that can be used as a starting point
   ! Lucas Visscher, March 2022
 
+  ! modified by Nino Keuzenkamp
+
   use molecular_structure
   use ao_basis
   use compute_integrals
