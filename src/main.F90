@@ -33,7 +33,9 @@ program HartreeFock
   logical :: converged        ! true if the SCF cycle converged
 
   character(32) :: outfile
+  real(8)       :: time_start, time_end
 
+  call cpu_time(time_start)
 
   ! get molecule, ao_basis, n_occ, n_cycles, outfile
   call read_input(molecule, ao_basis, n_occ, n_cycles, preset)
@@ -93,7 +95,7 @@ program HartreeFock
     ! convergence check
     converged = convergence_check(energy%HF, energy%HF_old, D_new, D_old, tolerance_E, tolerance_D)
     if (converged) then
-      print "(/, a, i4)", "Program converged on cycle ", i
+      print "(/, a, i4, a)", "Program converged on cycle ", i, "."
       exit
     endif
 
@@ -109,15 +111,19 @@ program HartreeFock
   energy%HF     = energy%HF
   energy%HF_old = energy%HF_old
 
+  call cpu_time(time_end)
+  print "(a, f10.7, a)", "The program took ", time_end-time_start, " seconds to finish the SCF loop."
+
   ! if MP2 is enabled
   if (preset%MP2) then
+    print "(/, a)", "Now starting MP2 correlation energy calculation."
     energy%MP2 = MP2_energy(ao_integrals, C, eps, n_occ, n_ao)
+    call cpu_time(time_end)
+    print "(a, f10.7, a)", "The program took ", time_end-time_start, " seconds to finish the MP2 correlation energy calculation."
   endif
 
-
-  print "(a)", "Program has finished."
   call write_to_file(molecule, energy, outfile, converged, i, eps, n_occ, preset)
-  print "(a)", "Results have been written to the file"
+  print "(/, a)", "Result file has been made."
 
 end program HartreeFock
 

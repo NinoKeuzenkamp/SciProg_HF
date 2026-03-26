@@ -163,7 +163,7 @@ contains
         character(32), intent(out) :: outfile
 
         print "(/, a)", "Please input the path for your output txt file. (max 32 characters)"
-        print "(a)", "Note that the program cannot make new folders"
+        print "(a)", "Note that the program cannot make new folders."
         read "(a32)", outfile
     end subroutine get_output_file
 

@@ -8,6 +8,8 @@ public :: MP2_energy
 
 contains
 
+    ! calculates the MP2 correlation energy
+    ! n^8 implementation
     real(8) function MP2_energy(ao_integrals, C, eps, n_occ, n_ao) result(energy)
         real(8), intent(in) :: ao_integrals(:,:,:,:), C(:,:), eps(:)
         integer, intent(in) :: n_occ, n_ao
